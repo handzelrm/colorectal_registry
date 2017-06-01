@@ -40,19 +40,6 @@ def load_and_pickle(file):
     'prim_sx_cd_a___1','prim_sx_cd_a___2','prim_sx_cd_a___30','prim_sx_cd_a___31','prim_sx_cd_a___3','prim_sx_cd_a___4','prim_sx_cd_a___24','prim_sx_cd_a___25','prim_sx_cd_a___5','prim_sx_cd_a___6','prim_sx_cd_a___7','prim_sx_cd_a___8','prim_sx_cd_a___29','prim_sx_cd_a___9','prim_sx_cd_a___10','prim_sx_cd_a___11','prim_sx_cd_a___22','prim_sx_cd_a___23','prim_sx_cd_a___26','prim_sx_cd_a___12','prim_sx_cd_a___13','prim_sx_cd_a___14','prim_sx_cd_a___15','prim_sx_cd_a___16','prim_sx_cd_a___21','prim_sx_cd_a___27','prim_sx_cd_a___28','prim_sx_cd_a___17','prim_sx_cd_a___18','prim_sx_cd_a___19','prim_sx_cd_a___20','prim_sx_other_cd_a',
     'sx_multivisc_rxn_a','sx_anastomosis_a','sx_anastamosis_ibd_a','sx_temp_diversion_a','secondary_sx_a___17','secondary_sx_a___18','secondary_sx_a___19','secondary_sx_a___20','secondary_sx_a___21','secondary_sx_a___22','secondary_sx_a___23','secondary_sx_a___24','secondary_sx_a___25','secondary_sx_a___26','secondary_sx_a___27','secondary_sx_a___28','secondary_sx_a___29','secondary_sx_a___30','other_secondary_sx_a']
 
-    # sx_no_dict = ['prim_sx_colonca_a___35', 'prim_sx_colonca_a___36', 'prim_sx_colonpolyp_a___34', 'prim_sx_colonpolyp_a___35', 'sx_anastomosis_a', 'sx_anastamosis_ibd_a', 'sx_comb_service_a___16', 'sx_comb_service_a___17', 'sx_comb_service_a___18', 'sx_comb_service_a___19', 'sx_comb_service_a___20', 'sx_comb_service_a___21']
-
-    # for item in sx_list:
-    #     # print(item)
-    #     print(item)
-    #     if item == 'sx_comb_service_a___17':
-    #         print(item)
-    #     if item in sx_no_dict:
-    #         sx_list.remove(item)
-    #         # print(item)
-    #         # print('match')
-    # # print(sx_list)
-    # return
     pd.to_pickle(sx_list, 'S:\ERAS\crdb_sx_list.pickle')
 
 def extract_sx_data():
@@ -89,7 +76,6 @@ def create_sx_values():
         
         # print("'{}':[],".format(sx)) #used to create text to initiate all lists
         # print("{}".format(sx)) #used to create text to initiate all lists
-
     
     
     output_dict = {'patient_id':[],
@@ -152,20 +138,6 @@ def create_sx_values():
     'Partial_vaginectomy':[],
     'Plastics_flap_closure':[],
     'Salpingo_oophorectomy':[]}
-        
-
-    # sx_no_dict = ['prim_sx_colonca_a___35', 'prim_sx_colonca_a___36', 'prim_sx_colonpolyp_a___34', 'prim_sx_colonpolyp_a___35', 'sx_anastomosis_a', 'sx_anastamosis_ibd_a', 'sx_comb_service_a___16', 'sx_comb_service_a___17', 'sx_comb_service_a___18', 'sx_comb_service_a___19', 'sx_comb_service_a___20', 'sx_comb_service_a___21']
-
-
-    # return
-
-    # print(df.head())
-    # return
-    # print(test)
-    # print(len(test))
-    # return
-
-    # print(df.columns)
 
     percentage = 0
     pt_cnt = 0
@@ -182,15 +154,9 @@ def create_sx_values():
         if df_pt.shape[0]>1:
             pass
         else:
-            # print(df_pt.shape)
-            pt_sx_list = df_pt.columns[df_pt.iloc[0,]==1].values
-            # output_dict['patient_id'].append(pt)
-            # if 'patient_id' in pt_sx_list:
-            #     del pt_sx_list[0] #del patient_id from list
 
-            # print(pt_sx_list)
-            # print(pt_sx_list)
-            # print(pt_sx_list)
+            pt_sx_list = df_pt.columns[df_pt.iloc[0,]==1].values
+
             condensed_pt_sx_list = []
             for item in pt_sx_list:
                 if item != 'patient_id':
@@ -208,34 +174,6 @@ def create_sx_values():
                     # print('match')
                 else:
                     output_dict[item].append(0)
-        # return
-        """
-        #851.1s
-        for col in df_pt.columns:
-            if df_pt.shape[0]>1:
-                pass
-            else:
-                if col == 'patient_id':
-                    pass
-                else:
-                    try:
-                        sx_column = sx_ddf.unique[sx_ddf.name==col].values[0]
-                    except:
-                        if col not in test:
-                            test.append(col)
-                        
-                        
-                    if df_pt[col].values[0] == 1:
-                        # cnt +=1                        
-                        output_dict[sx_column].append(1)
-                    else:
-                        output_dict[sx_column].append(0)
-                        """
-                        
-                        # return col
-                    # print(col)
-                    # print(df_pt[col].values[0])
-        # cnt_list.append(cnt)
 
         #display percentage
         if round(pt_cnt/num_of_pts*100) != percentage:
@@ -244,19 +182,13 @@ def create_sx_values():
                 running_fxn(20,percentage)
     # print(test)
     print('pt cnt: {}'.format(pt_cnt))
-    # print(max(cnt_list))
-    # for sx in output_dict:
-    #     print(len(output_dict[sx]))
+
     df_out = pd.DataFrame(output_dict)
-    # print(df_out.patient_id)
+
 
     df_final = pd.merge(df,df_out,how='inner',on='patient_id')
 
     print(test)
-
-    # print(df.shape)
-    # print(df_out.shape)
-    # print(df_final.shape)
 
     print('Saving data to excel and pickle file...')
 
@@ -273,11 +205,6 @@ def pt_query():
 
     tpc_list = ['total_proctocolectomy_with_end_ileostomy','total_proctocolectomy_with_ileal_pouch_anal_anastomosis','total_proctocolectomy_with_ileal_pouch_anal_anastomosis','total_proctocolectomy','total_abdominal_colectomy_with_end_ileostomy','total_abdominal_colectomy_with_ileorectal_anastamosis','total_abdominal_colectomy_with_ileorectal_anastamosis','total_abdominal_colectomy']
 
-    # # print(df.patient_id[df==1])
-    # print(df.shape[0])
-    # print(df.columns[df.iloc[0,]==1].values)
-    # print(df.head())
-    # print(df.head())
     pt_to_include = []
     for pt in range(df.shape[0]):
         pt_sx_list = df.columns[df.iloc[pt,]==1].values
@@ -287,12 +214,6 @@ def pt_query():
 
     print('Number of patients in the following list of procedures {} was {}'.format(tpc_list,len(pt_to_include)))
     print(pt_to_include)
-
-
-
-
-
-
 
 load_and_pickle('S:\ERAS\CR_all.xlsx')
 extract_sx_data()
