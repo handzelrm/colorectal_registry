@@ -52,7 +52,6 @@ def extract_sx_data():
     sx_df.drop('redcap_event_name',axis=1,inplace=True) #drops redcap column
     pd.to_pickle(sx_df, 'S:\ERAS\crdb_sx_data.pickle')
 
-
 def create_sx_values():
     print('create_sx_values is running...')
     df = pd.read_pickle('S:\ERAS\crdb_sx_data.pickle')
@@ -144,13 +143,10 @@ def create_sx_values():
     test = []
     running_fxn(20,percentage)
     for pt in df.patient_id:
-        # cnt = 0
         pt_cnt +=1
-        # print(pt_cnt)
         
         df_pt = df[df.patient_id==pt]
 
-        #4.4 seconds!
         if df_pt.shape[0]>1:
             pass
         else:
@@ -171,16 +167,12 @@ def create_sx_values():
                     output_dict[item].append(pt)
                 elif item in condensed_pt_sx_list:
                     output_dict[item].append(1)
-                    # print('match')
                 else:
                     output_dict[item].append(0)
-
-        #display percentage
         if round(pt_cnt/num_of_pts*100) != percentage:
             percentage = round(pt_cnt/num_of_pts*100)
             if percentage in range(0,101,5):
                 running_fxn(20,percentage)
-    # print(test)
     print('pt cnt: {}'.format(pt_cnt))
 
     df_out = pd.DataFrame(output_dict)
@@ -212,13 +204,25 @@ def pt_query():
             if item in tpc_list:
                 pt_to_include.append(df.patient_id.iloc[pt])
 
-    print('Number of patients in the following list of procedures {} was {}'.format(tpc_list,len(pt_to_include)))
-    print(pt_to_include)
+    # print('Number of patients in the following list of procedures {} was {}'.format(tpc_list,len(pt_to_include)))
+    # print(pt_to_include)
 
-load_and_pickle('S:\ERAS\CR_all.xlsx')
-extract_sx_data()
-create_sx_values()
-pt_query()
+    return pt_to_include
+
+# load_and_pickle('S:\ERAS\CR_all.xlsx')
+# extract_sx_data()
+# create_sx_values()
+tpc_pt_list = pt_query()
+
+# print(tpc_pt_list)
+
+def tpc_data(file,tpc_pt_list):
+    df = pd.read_pickle('S:\ERAS\cr_datebase.pickle')
+    df = df[df.patient_id.isin(tpc_pt_list)]
+    print(df.head(10))
+
+
+tpc_data('S:\ERAS\CR_all.xlsx',tpc_pt_list)
 
 """
 1 - no
