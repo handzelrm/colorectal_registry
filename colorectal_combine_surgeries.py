@@ -244,6 +244,17 @@ def condense_rows(df):
 #there is an issue with _complete as it is not clear where these columns come from ? section headers. May just ignore for now
 
 
+
+
+#baseline arms: demographics, patient info, family hx
+#preop visit armS: preop eval 1,2,3
+#neoadj arms: neoadjuvant_treatment
+#surgery arms: surgery a,b,c,d
+#pathology arms: pathology a,b,c,d
+#adjuvant arms: adjuvant treatment
+#post op comp amrs: post op complications a,b,c,d
+
+
 def create_data_dict(input_dict):
     # df = pd.read_excel('S:\ERAS\sx_list_imput.xlsx')
     df = pd.read_excel(input_dict)
@@ -252,6 +263,7 @@ def create_data_dict(input_dict):
     score = []
     unique_list = [] #unique names
     unique_code = [] #unique codes for each procedure
+    form_name_list = []
 
     df_unique = pd.read_excel('S:\ERAS\CR_unique_dict.xlsx')
     procedure_dict = df_unique.to_dict()
@@ -259,6 +271,7 @@ def create_data_dict(input_dict):
     #iterate over all rows
     for row in df.iterrows():
         input_name = row[1].values[0] #gets main name
+        form_name = row[1].values[3] #gest form name
         field_type = row[1].values[5] #gest field type
         text_names = row[1].values[7] #gets long string with values separated by "|", except for a few that have no string
         
@@ -275,6 +288,7 @@ def create_data_dict(input_dict):
                             unique_list.append(procedure_dict[procedure][0])
                             unique_code.append(procedure_dict[procedure][1])
                             score.append(procedure_dict[procedure][2])
+                            form_name_list.append(form_name)
                             match = True
                             break #if match no need to look further
                     #checks to make sure there was a match
@@ -282,6 +296,7 @@ def create_data_dict(input_dict):
                         unique_list.append('None')
                         unique_code.append(-1)
                         score.append(-1)
+                        form_name_list.append(form_name)
                     regex = re.search(r'(\w+).*',item)
                     number = regex.group(1) #number value from string
                     procedure = regex.group(0) #whole string
@@ -298,6 +313,7 @@ def create_data_dict(input_dict):
                         unique_list.append(procedure_dict[procedure][0])
                         unique_code.append(procedure_dict[procedure][1])
                         score.append(procedure_dict[procedure][2])
+                        form_name_list.append(form_name)
                         match = True
                         break #if match no neeed to look further
                 #checks to make sure there was a match
@@ -305,6 +321,7 @@ def create_data_dict(input_dict):
                     unique_list.append('None')
                     unique_code.append(-1)
                     score.append(-1)
+                    form_name_list.append(form_name)
                 regex = re.search(r'(\w+).*',item)
                 number = regex.group(1)
                 procedure = regex.group(0)
@@ -319,6 +336,7 @@ def create_data_dict(input_dict):
                     unique_list.append(procedure_dict[procedure][0])
                     unique_code.append(procedure_dict[procedure][1])
                     score.append(procedure_dict[procedure][2])
+                    form_name_list.append(form_name)
                     match = True
                     break #if match no neeed to look further
             #checks to make sure there was a match
@@ -326,6 +344,7 @@ def create_data_dict(input_dict):
                 unique_list.append('None')
                 unique_code.append(-1)
                 score.append(-1)
+                form_name_list.append(form_name)
             regex = re.search(r'(\w+).*',item)
             number = regex.group(1)
             procedure = regex.group(0)
@@ -337,13 +356,14 @@ def create_data_dict(input_dict):
     df_out['description'] = description_output
     df_out['unique'] = unique_list
     df_out['code'] = unique_code
+    df_out['form_name'] = form_name_list
     writer = pd.ExcelWriter('S:\ERAS\sx_list_dict_comp_test.xlsx')
     df_out.to_excel(writer,'Sheet1')
     writer.close()
 
     pd.to_pickle(df_out,'S:\ERAS\sx_list_dict_comp_test.pickle')
 
-# create_data_dict('S:\ERAS\colorectal_registry_dictionary_06012017.xlsx')
+create_data_dict('S:\ERAS\colorectal_registry_dictionary_06012017.xlsx')
 
 
 def testing():
@@ -354,7 +374,7 @@ def testing():
     print(list(set(df_col_list)-set(df_dict_list)))
     # print(list(set(df_dict_list)-set(df_col_list)))
 
-testing()
+# testing()
 
 """
 1 - no
