@@ -234,8 +234,53 @@ def tpc_data(file,tpc_pt_list):
 
 # tpc_data('S:\ERAS\CR_all.xlsx',tpc_pt_list)
 
-def condense_rows(df):
-    pass
+def condense_rows():
+    df = pd.read_pickle('S:\ERAS\cr_datebase.pickle') #whole database pickle
+    df_dict = pd.read_pickle('S:\ERAS\colorecatal_dict.pickle') #loads dictionary pickle
+
+    #creates a list of column headers for each type of event
+    baseline_form_list = ['demographics','patient_info','patient_hx','family_hx']
+    baseline_headers = df_dict.name[df_dict.form_name.isin(baseline_form_list)].tolist()
+
+    preop_form_list = ['preop_evaluation_1','preop_evaluation_2','preop_evaluation_3']
+    preop_headers = df_dict.name[df_dict.form_name.isin(preop_form_list)].tolist()
+
+    neoadjuvant_form_list = ['neoadjuvant_treatment']
+    neoadjuvant_headers = df_dict.name[df_dict.form_name.isin(neoadjuvant_form_list)].tolist()
+
+    surgery_form_list = ['surgery_a','surgery_b','surgery_c','surgery_d']
+    surgery_headers = df_dict.name[df_dict.form_name.isin(surgery_form_list)].tolist()
+
+    pathology_form_list = ['pathology_a','pathology_b','pathology_c','pathology_d']
+    pathology_headers = df_dict.name[df_dict.form_name.isin(pathology_form_list)].tolist()
+
+    adjuvant_form_list = ['adjuvant_treatment']
+    adjuvant_headers = df_dict.name[df_dict.form_name.isin(adjuvant_form_list)].tolist()
+
+    postop_comp_form_list = ['post_op_complications_a','post_op_complications_b','post_op_complications_c','post_op_complications_d']
+    postop_comp_headers = df_dict.name[df_dict.form_name.isin(postop_comp_form_list)].tolist()
+
+    event_dict = {'baseline':baseline_headers,'preop':preop_headers,'neoadjuvant':neoadjuvant_headers,'surgery':surgery_headers,'pathology':pathology_headers,'adjuvant':adjuvant_headers,'postop_comp':postop_comp_headers}
+    
+    df_pt = df[df.patient_id==1] #just for testing. will replace with loop
+    # regex_baseline = re.compile(r'baseline')
+    # print(df_pt.redcap_event_name.tolist())
+    # test = re.search(regex_baseline,df_pt.redcap_event_name.tolist())
+
+    # test_df = df_pt[re.search(regex_baseline,df_pt.redcap_event_name)==1]
+
+    # df_pt_baseline = df_pt[df_pt.redcap_event_name.str.contains('baseline')]
+    # df_pt_baseline[]
+
+    # for event in event_dict:
+    #     print(df_pt[event_dict[event]].shape)
+
+
+    # for event in event_dict:
+    #     print(event_dict[event])
+
+
+
 
 #need to convert data dictionary from the redcap database variable/field names to column names used in database output
 #also need the form name which will be used for grouping the rows and condense the pts data to 1 row per pt
@@ -357,13 +402,13 @@ def create_data_dict(input_dict):
     df_out['unique'] = unique_list
     df_out['code'] = unique_code
     df_out['form_name'] = form_name_list
-    writer = pd.ExcelWriter('S:\ERAS\sx_list_dict_comp_test.xlsx')
+    writer = pd.ExcelWriter('S:\ERAS\colorectal_dict.xlsx')
     df_out.to_excel(writer,'Sheet1')
     writer.close()
 
-    pd.to_pickle(df_out,'S:\ERAS\sx_list_dict_comp_test.pickle')
+    pd.to_pickle(df_out,'S:\ERAS\colorecatal_dict.pickle')
 
-create_data_dict('S:\ERAS\colorectal_registry_dictionary_06012017.xlsx')
+# create_data_dict('S:\ERAS\colorectal_registry_dictionary_06012017.xlsx')
 
 
 def testing():
@@ -375,6 +420,7 @@ def testing():
     # print(list(set(df_dict_list)-set(df_col_list)))
 
 # testing()
+condense_rows()
 
 """
 1 - no
