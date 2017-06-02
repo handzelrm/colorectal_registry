@@ -218,11 +218,100 @@ tpc_pt_list = pt_query()
 
 def tpc_data(file,tpc_pt_list):
     df = pd.read_pickle('S:\ERAS\cr_datebase.pickle')
+    # redcap = df.redcap_event_name.unique().tolist()
     df = df[df.patient_id.isin(tpc_pt_list)]
-    print(df.head(10))
+    df_pt = df[df.patient_id==30]
+    
+    redcap = df_pt.redcap_event_name.unique().tolist()
+    cnt = 0
+    print(df_pt.shape[1])
+    for event in redcap:
+        # print(df_pt[df_pt.redcap_event_name==event].shape)
+        
+        cnt+=df_pt[df_pt.redcap_event_name==event].dropna(axis=1).shape[1]
+    print(cnt)
 
 
 tpc_data('S:\ERAS\CR_all.xlsx',tpc_pt_list)
+
+def condense_rows(df):
+    pass
+
+#need to convert data dictionary from the redcap database variable/field names to column names used in database output
+#also need the form name which will be used for grouping the rows and condense the pts data to 1 row per pt
+def create_data_dict():
+    df = pd.read_excel('S:\ERAS\sx_list_imput.xlsx')
+    main_output = [] #will be column name in CR database
+    description_output = [] #description of column
+    score = []
+    unique_list = [] #unique names
+    unique_code = [] #unique codes for each procedure
+
+    df_unique = pd.read_excel('S:\ERAS\CR_unique_dict.xlsx')
+    procedure_dict = df_unique.to_dict()
+
+    #iterate over all rows
+    for row in df.iterrows():
+        input_name = row[1].values[0] #gets main name
+        text_names = row[1].values[1] #gets long string with values separated by "|", except for a few that have no string
+        
+        #for cells that have a strings separated by "|"
+        try:
+            text_list = text_names.split(' | ')
+            for item in text_list:
+                match = False
+                for procedure in procedure_dict:      
+                    find_procedure = re.search(procedure,item)
+                    if find_procedure is not None:
+                        unique_list.append(procedure_dict[procedure][0])
+                        unique_code.append(procedure_dict[procedure][1])
+                        score.append(procedure_dict[procedure][2])
+                        match = True
+                        break #if match no need to look further
+                #checks to make sure there was a match
+                if not match:
+                    unique_list.append('None')
+                    unique_code.append(-1)
+                regex = re.search(r'(\w+).*',item)
+                number = regex.group(1) #number value from string
+                procedure = regex.group(0) #whole string
+                main_output.append('{}___{}'.format(input_name,number)) #creates the unique name for each value in second column separted by "|"
+                description_output.append(procedure)
+        
+        #for cells that do not have a string in the second column
+        except:
+            item = input_name
+            match = False
+            for procedure in procedure_dict:      
+                find_procedure = re.search(procedure,item)
+                if find_procedure is not None:
+                    unique_list.append(procedure_dict[procedure][0])
+                    unique_code.append(procedure_dict[procedure][1])
+                    score.append(procedure_dict[procedure][2])
+                    match = True
+                    break #if match no neeed to look further
+            #checks to make sure there was a match
+            if not match:
+                unique_list.append('None')
+                unique_code.append(-1)
+            regex = re.search(r'(\w+).*',item)
+            number = regex.group(1)
+            procedure = regex.group(0)
+            main_output.append(input_name)
+            description_output.append(procedure)
+        
+    df_out = pd.DataFrame(main_output,columns=['name'])
+    df_out['score'] = score
+    df_out['description'] = description_output
+    df_out['unique'] = unique_list
+    df_out['code'] = unique_code
+    writer = pd.ExcelWriter('S:\ERAS\sx_list_dict_comp.xlsx')
+    df_out.to_excel(writer,'Sheet1')
+    writer.close()
+
+    pd.to_pickle(df_out,'S:\ERAS\sx_list_dict_comp.pickle')
+
+
 
 """
 1 - no
