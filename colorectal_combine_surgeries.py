@@ -240,7 +240,8 @@ def condense_rows(df):
 #need to convert data dictionary from the redcap database variable/field names to column names used in database output
 #also need the form name which will be used for grouping the rows and condense the pts data to 1 row per pt
 
-
+#will need to update the dictionary at some point
+#there is an issue with _complete as it is not clear where these columns come from ? section headers. May just ignore for now
 
 
 def create_data_dict(input_dict):
@@ -258,12 +259,38 @@ def create_data_dict(input_dict):
     #iterate over all rows
     for row in df.iterrows():
         input_name = row[1].values[0] #gets main name
+        field_type = row[1].values[5] #gest field type
         text_names = row[1].values[7] #gets long string with values separated by "|", except for a few that have no string
         
-        #for cells that have a strings separated by "|"
-        try:
-            text_list = text_names.split(' | ')
-            for item in text_list:
+        if field_type == 'checkbox':
+
+            #for cells that have a strings separated by "|"
+            try:
+                text_list = text_names.split(' | ')
+                for item in text_list:
+                    match = False
+                    for procedure in procedure_dict:      
+                        find_procedure = re.search(procedure,item)
+                        if find_procedure is not None:
+                            unique_list.append(procedure_dict[procedure][0])
+                            unique_code.append(procedure_dict[procedure][1])
+                            score.append(procedure_dict[procedure][2])
+                            match = True
+                            break #if match no need to look further
+                    #checks to make sure there was a match
+                    if not match:
+                        unique_list.append('None')
+                        unique_code.append(-1)
+                        score.append(-1)
+                    regex = re.search(r'(\w+).*',item)
+                    number = regex.group(1) #number value from string
+                    procedure = regex.group(0) #whole string
+                    main_output.append('{}___{}'.format(input_name,number)) #creates the unique name for each value in second column separted by "|"
+                    description_output.append(procedure)
+            
+            #for cells that do not have a string in the second column
+            except:
+                item = input_name
                 match = False
                 for procedure in procedure_dict:      
                     find_procedure = re.search(procedure,item)
@@ -272,20 +299,18 @@ def create_data_dict(input_dict):
                         unique_code.append(procedure_dict[procedure][1])
                         score.append(procedure_dict[procedure][2])
                         match = True
-                        break #if match no need to look further
+                        break #if match no neeed to look further
                 #checks to make sure there was a match
                 if not match:
                     unique_list.append('None')
                     unique_code.append(-1)
                     score.append(-1)
                 regex = re.search(r'(\w+).*',item)
-                number = regex.group(1) #number value from string
-                procedure = regex.group(0) #whole string
-                main_output.append('{}___{}'.format(input_name,number)) #creates the unique name for each value in second column separted by "|"
+                number = regex.group(1)
+                procedure = regex.group(0)
+                main_output.append(input_name)
                 description_output.append(procedure)
-        
-        #for cells that do not have a string in the second column
-        except:
+        else: 
             item = input_name
             match = False
             for procedure in procedure_dict:      
@@ -318,7 +343,18 @@ def create_data_dict(input_dict):
 
     pd.to_pickle(df_out,'S:\ERAS\sx_list_dict_comp_test.pickle')
 
-create_data_dict('S:\ERAS\colorectal_registry_dictionary_06012017.xlsx')
+# create_data_dict('S:\ERAS\colorectal_registry_dictionary_06012017.xlsx')
+
+
+def testing():
+    df = pd.read_pickle('S:\ERAS\cr_datebase.pickle')
+    df_dict = pd.read_pickle('S:\ERAS\sx_list_dict_comp_test.pickle')
+    df_col_list = df.columns.tolist()
+    df_dict_list = df_dict.name.tolist()
+    print(list(set(df_col_list)-set(df_dict_list)))
+    # print(list(set(df_dict_list)-set(df_col_list)))
+
+testing()
 
 """
 1 - no
