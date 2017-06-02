@@ -232,15 +232,20 @@ def tpc_data(file,tpc_pt_list):
     print(cnt)
 
 
-tpc_data('S:\ERAS\CR_all.xlsx',tpc_pt_list)
+# tpc_data('S:\ERAS\CR_all.xlsx',tpc_pt_list)
 
 def condense_rows(df):
     pass
 
 #need to convert data dictionary from the redcap database variable/field names to column names used in database output
 #also need the form name which will be used for grouping the rows and condense the pts data to 1 row per pt
-def create_data_dict():
-    df = pd.read_excel('S:\ERAS\sx_list_imput.xlsx')
+
+
+
+
+def create_data_dict(input_dict):
+    # df = pd.read_excel('S:\ERAS\sx_list_imput.xlsx')
+    df = pd.read_excel(input_dict)
     main_output = [] #will be column name in CR database
     description_output = [] #description of column
     score = []
@@ -253,7 +258,7 @@ def create_data_dict():
     #iterate over all rows
     for row in df.iterrows():
         input_name = row[1].values[0] #gets main name
-        text_names = row[1].values[1] #gets long string with values separated by "|", except for a few that have no string
+        text_names = row[1].values[7] #gets long string with values separated by "|", except for a few that have no string
         
         #for cells that have a strings separated by "|"
         try:
@@ -272,6 +277,7 @@ def create_data_dict():
                 if not match:
                     unique_list.append('None')
                     unique_code.append(-1)
+                    score.append(-1)
                 regex = re.search(r'(\w+).*',item)
                 number = regex.group(1) #number value from string
                 procedure = regex.group(0) #whole string
@@ -294,6 +300,7 @@ def create_data_dict():
             if not match:
                 unique_list.append('None')
                 unique_code.append(-1)
+                score.append(-1)
             regex = re.search(r'(\w+).*',item)
             number = regex.group(1)
             procedure = regex.group(0)
@@ -305,13 +312,13 @@ def create_data_dict():
     df_out['description'] = description_output
     df_out['unique'] = unique_list
     df_out['code'] = unique_code
-    writer = pd.ExcelWriter('S:\ERAS\sx_list_dict_comp.xlsx')
+    writer = pd.ExcelWriter('S:\ERAS\sx_list_dict_comp_test.xlsx')
     df_out.to_excel(writer,'Sheet1')
     writer.close()
 
-    pd.to_pickle(df_out,'S:\ERAS\sx_list_dict_comp.pickle')
+    pd.to_pickle(df_out,'S:\ERAS\sx_list_dict_comp_test.pickle')
 
-
+create_data_dict('S:\ERAS\colorectal_registry_dictionary_06012017.xlsx')
 
 """
 1 - no
