@@ -262,20 +262,16 @@ def condense_rows():
 
     event_dict = {'baseline':baseline_headers,'preop':preop_headers,'neoadjuvant':neoadjuvant_headers,'surgery':surgery_headers,'pathology':pathology_headers,'adjuvant':adjuvant_headers,'postop_comp':postop_comp_headers}
     
+    #loops through the event dictionaries and adding patient_id if not there
     for event in event_dict:
-        event_dict[event].append('patient_id')
+        if 'patient_id' not in event_dict[event]:
+            event_dict[event].append('patient_id')
 
     df_pt = df[df.patient_id==1] #just for testing. will replace with loop
+
     print('pt df shape {shape}'.format(shape=df_pt.shape))
 
-    df_test = df_pt[baseline_headers]
-    num_col = len(baseline_headers)
-
-    old_col = df_test.columns
-
-    for col in old_col:
-        if col not in df_test.columns:
-            pass
+    pt_id=1
 
     new_pt_df = pd.DataFrame() #initates new pt df
 
@@ -283,30 +279,36 @@ def condense_rows():
     for event in event_dict:
         try:
             df_event = df_pt[event_dict[event]]
-            one_event = df_event.dropna(thresh=df_event.shape[1]-df_event.shape[1]*.80)
+            one_event = df_event.dropna(thresh=df_event.shape[1]-df_event.shape[1]*.60)
 
             #no events
             if(one_event.shape[0]==0):
                 print('no events')
+                nan_filling = np.full(len(event_dict[event]),np.nan)
+                df_series = pd.Series(data=nan_filling,index=event_dict[event])
+                df_series.patient_id=pt_id
+                one_event = one_event.append(df_series,ignore_index=True)
+                if new_pt_df.shape[0]==0:
+                    new_pt_df = one_event
+                else:
+                    new_pt_df = new_pt_df.merge(one_event,on='patient_id')
+
+            #one event
             elif one_event.shape[0]==1:
                 print('1 event')
 
                 if new_pt_df.shape[0]==0:
                     new_pt_df = one_event
                 else:
-                    print('one_event shape {shape}'.format(shape=one_event.shape))
-                    new_pt_df = pd.concat([new_pt_df,one_event],axis=1)
-                    print('new_pt shape {shape}'.format(shape=new_pt_df.shape))
-                    print(new_pt_df.head())
-
-                    
+                    new_pt_df = new_pt_df.merge(one_event,on='patient_id')    
+            
+            #more than one event
             else:
                 print('ERROR - more than one row')
 
         except KeyError:
-            pass
-            print('error')
-        
+            #need to fix this issue by updating the data dictionary
+            print('error')        
 
     print('shape={shape}'.format(shape=new_pt_df.shape))
 
