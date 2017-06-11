@@ -13,10 +13,10 @@ Last Modified: 4/1/17
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import re
 from sklearn import svm
 from matplotlib import style
 style.use('ggplot')
-import re
 
 def running_fxn(splits,percent):
         print('0%|'+'#'*int(percent/(100/splits))+' '*int((100-percent)/(100/splits))+'|100%')
@@ -262,6 +262,9 @@ def condense_rows():
 
     event_dict = {'baseline':baseline_headers,'preop':preop_headers,'neoadjuvant':neoadjuvant_headers,'surgery':surgery_headers,'pathology':pathology_headers,'adjuvant':adjuvant_headers,'postop_comp':postop_comp_headers}
     
+    for event in event_dict:
+        event_dict[event].append('patient_id')
+
     df_pt = df[df.patient_id==1] #just for testing. will replace with loop
     # regex_baseline = re.compile(r'baseline')
     # print(df_pt.redcap_event_name.tolist())
@@ -275,10 +278,58 @@ def condense_rows():
     # for event in event_dict:
     #     print(df_pt[event_dict[event]].shape)
 
-
+    
     # for event in event_dict:
-    #     print(event_dict[event])
+        # print(event_dict[event])
+    df_test = df_pt[baseline_headers]
+    num_col = len(baseline_headers)
+    # print(num_col)
+    # print(df_test.dropna(thresh=220))
+    df_test.dropna(thresh=200,inplace=True)
+    # print(df_test.shape)
+    old_col = df_test.columns
+    # print(df_test.columns)
+    # print(df_test.dropna(axis=1,inplace=True))
+    for col in old_col:
+        if col not in df_test.columns:
+            # print(col)
+            pass
+    # print(df_test.columns[df_test.isnull()])
 
+    new_pt_df = pd.DataFrame() #initates new pt df
+    for event in event_dict:
+        try:
+            df_event = df_pt[event_dict[event]]
+            # print(event)
+            # print(df_event.shape)
+            df_event.dropna(thresh=df_event.shape[1]-df_event.shape[1]*.98,inplace=True)
+            # print(df_event.shape)
+            if(df_event.shape[0]==0):
+                # print(df_event)
+                pass
+            elif df_event.shape[0]==1:
+
+                # print('not empty')
+                # print(df_event.shape)
+                if new_pt_df.shape[0]==0:
+                    new_pt_df = df_event
+                else:
+                    # print(event)
+                    # print(new_pt_df.shape)
+                    # print(df_event.shape)
+                    new_pt_df = pd.concat([new_pt_df,df_event],axis=1)
+                    print(new_pt_df.shape)
+
+                    # new_pt_df.join(df_event,on='patient_id')
+                    # new_pt_df.merge(df_event)
+            else:
+                print('ERROR - more than one row')
+
+        except KeyError:
+            pass
+        
+
+    print('shape={}'.format(new_pt_df.shape))
 
 
 
@@ -375,7 +426,7 @@ def create_data_dict(input_dict):
         else: 
             item = input_name
             match = False
-            for procedure in procedure_dict:      
+            for procedure in procedure_dict:
                 find_procedure = re.search(procedure,item)
                 if find_procedure is not None:
                     unique_list.append(procedure_dict[procedure][0])
@@ -409,6 +460,7 @@ def create_data_dict(input_dict):
     pd.to_pickle(df_out,'S:\ERAS\colorecatal_dict.pickle')
 
 # create_data_dict('S:\ERAS\colorectal_registry_dictionary_06012017.xlsx')
+# create_data_dict('S:\ERAS\colorectal_registry_dictionary_01182017.xlsx')
 
 
 def testing():
