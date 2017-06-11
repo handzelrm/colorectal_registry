@@ -266,70 +266,49 @@ def condense_rows():
         event_dict[event].append('patient_id')
 
     df_pt = df[df.patient_id==1] #just for testing. will replace with loop
-    # regex_baseline = re.compile(r'baseline')
-    # print(df_pt.redcap_event_name.tolist())
-    # test = re.search(regex_baseline,df_pt.redcap_event_name.tolist())
+    print('pt df shape {shape}'.format(shape=df_pt.shape))
 
-    # test_df = df_pt[re.search(regex_baseline,df_pt.redcap_event_name)==1]
-
-    # df_pt_baseline = df_pt[df_pt.redcap_event_name.str.contains('baseline')]
-    # df_pt_baseline[]
-
-    # for event in event_dict:
-    #     print(df_pt[event_dict[event]].shape)
-
-    
-    # for event in event_dict:
-        # print(event_dict[event])
     df_test = df_pt[baseline_headers]
     num_col = len(baseline_headers)
-    # print(num_col)
-    # print(df_test.dropna(thresh=220))
-    df_test.dropna(thresh=200,inplace=True)
-    # print(df_test.shape)
+
     old_col = df_test.columns
-    # print(df_test.columns)
-    # print(df_test.dropna(axis=1,inplace=True))
+
     for col in old_col:
         if col not in df_test.columns:
-            # print(col)
             pass
-    # print(df_test.columns[df_test.isnull()])
 
     new_pt_df = pd.DataFrame() #initates new pt df
+
+    #loop through eac event
     for event in event_dict:
         try:
             df_event = df_pt[event_dict[event]]
-            # print(event)
-            # print(df_event.shape)
-            df_event.dropna(thresh=df_event.shape[1]-df_event.shape[1]*.98,inplace=True)
-            # print(df_event.shape)
-            if(df_event.shape[0]==0):
-                # print(df_event)
-                pass
-            elif df_event.shape[0]==1:
+            one_event = df_event.dropna(thresh=df_event.shape[1]-df_event.shape[1]*.80)
 
-                # print('not empty')
-                # print(df_event.shape)
+            #no events
+            if(one_event.shape[0]==0):
+                print('no events')
+            elif one_event.shape[0]==1:
+                print('1 event')
+
                 if new_pt_df.shape[0]==0:
-                    new_pt_df = df_event
+                    new_pt_df = one_event
                 else:
-                    # print(event)
-                    # print(new_pt_df.shape)
-                    # print(df_event.shape)
-                    new_pt_df = pd.concat([new_pt_df,df_event],axis=1)
-                    print(new_pt_df.shape)
+                    print('one_event shape {shape}'.format(shape=one_event.shape))
+                    new_pt_df = pd.concat([new_pt_df,one_event],axis=1)
+                    print('new_pt shape {shape}'.format(shape=new_pt_df.shape))
+                    print(new_pt_df.head())
 
-                    # new_pt_df.join(df_event,on='patient_id')
-                    # new_pt_df.merge(df_event)
+                    
             else:
                 print('ERROR - more than one row')
 
         except KeyError:
             pass
+            print('error')
         
 
-    print('shape={}'.format(new_pt_df.shape))
+    print('shape={shape}'.format(shape=new_pt_df.shape))
 
 
 
