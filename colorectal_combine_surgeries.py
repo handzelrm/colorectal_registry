@@ -24,9 +24,9 @@ def running_fxn(splits,percent):
 def load_and_pickle(file):
     print('load_and_pickle function is running...')
     
-    #load and pickle cr database
-    # df = pd.read_excel(file,sheetname='CR_all')
-    # pd.to_pickle(df, 'S:\ERAS\cr_datebase.pickle')
+    # load and pickle cr database
+    df = pd.read_excel(file,sheetname='CR_all')
+    pd.to_pickle(df, 'S:\ERAS\cr_datebase.pickle')
 
     #define and pickle sx_list
     sx_list = ['redcap_event_name','patient_id','prim_sx_rectalca_a___7','prim_sx_rectalca_a___8','prim_sx_rectalca_a___9','prim_sx_rectalca_a___10','prim_sx_rectalca_a___25','prim_sx_rectalca_a___11','prim_sx_rectalca_a___31','prim_sx_rectalca_a___30','prim_sx_rectalca_a___13','prim_sx_rectalca_a___14','prim_sx_rectalca_a___15','prim_sx_rectalca_a___27','prim_sx_rectalca_a___24','prim_sx_rectalca_a___16','prim_sx_rectalca_a___17','prim_sx_rectalca_a___18','prim_sx_rectalca_a___19','prim_sx_rectalca_a___28','prim_sx_rectalca_a___29','prim_sx_rectalca_a___20','prim_sx_rectalca_a___21','prim_sx_rectalca_a___22','prim_sx_rectalca_a___23','prim_sx_other_rectalca_a',
@@ -186,6 +186,7 @@ def create_sx_values():
 
     writer = pd.ExcelWriter('S:\ERAS\crdb_output.xlsx')
     df_out.to_excel(writer,'sheet1')
+
     writer.close()
 
     pd.to_pickle(df_out,'S:\ERAS\crdb_output.pickle')
@@ -209,7 +210,7 @@ def pt_query():
 
     return pt_to_include
 
-# load_and_pickle('S:\ERAS\CR_all.xlsx')
+load_and_pickle('S:\ERAS\CR_all.xlsx')
 # extract_sx_data()
 # create_sx_values()
 tpc_pt_list = pt_query()
@@ -265,20 +266,13 @@ def condense_rows():
     df_dict = {}
     condensed_dict = {}
 
-    # print(len(df.patient_id.unique()))
-
     #loops through the event dictionaries and adding patient_id if not there
     for event in event_dict:
         if 'patient_id' not in event_dict[event]:
             event_dict[event].append('patient_id')
-        try:
-            df_dict[event] = df[event_dict[event]]
-            condensed_dict[event] = df_dict[event].dropna(thresh=df_dict[event].shape[1]-df_dict[event].shape[1]*.90)
-            # print(condensed_dict)
-            # print(event)
-            # print('event shape:{event_shape} condensed shape:{condensed_shape}'.format(event_shape=df_dict[event].shape,condensed_shape=condensed_dict[event].shape))
-        except KeyError:
-            pass
+    
+        df_dict[event] = df[event_dict[event]]
+        condensed_dict[event] = df_dict[event].dropna(thresh=df_dict[event].shape[1]-df_dict[event].shape[1]*.90)
 
     final_df = pd.DataFrame()
     final_pt_rm_list = []
@@ -301,27 +295,12 @@ def condense_rows():
 
     print(final_pt_rm_list)
 
+    print('Writing data to file...')
     writer = pd.ExcelWriter('S:\ERAS\condensed_colorectal_data.xlsx')
     final_df.to_excel(writer,'Sheet1')
     writer.close()
 
-#need to convert data dictionary from the redcap database variable/field names to column names used in database output
-#also need the form name which will be used for grouping the rows and condense the pts data to 1 row per pt
-
-#will need to update the dictionary at some point
-#there is an issue with _complete as it is not clear where these columns come from ? section headers. May just ignore for now
-
-
-
-
-#baseline arms: demographics, patient info, family hx
-#preop visit armS: preop eval 1,2,3
-#neoadj arms: neoadjuvant_treatment
-#surgery arms: surgery a,b,c,d
-#pathology arms: pathology a,b,c,d
-#adjuvant arms: adjuvant treatment
-#post op comp amrs: post op complications a,b,c,d
-
+#need to update cr data - added blank rows of ileus compl (i think was deleted at some point to fix a bug)
 
 def create_data_dict(input_dict):
     # df = pd.read_excel('S:\ERAS\sx_list_imput.xlsx')
@@ -339,9 +318,9 @@ def create_data_dict(input_dict):
     #iterate over all rows
     for row in df.iterrows():
         input_name = row[1].values[0] #gets main name
-        form_name = row[1].values[3] #gest form name
-        field_type = row[1].values[5] #gest field type
-        text_names = row[1].values[7] #gets long string with values separated by "|", except for a few that have no string
+        form_name = row[1].values[1] #gest form name
+        field_type = row[1].values[3] #gest field type
+        text_names = row[1].values[5] #gets long string with values separated by "|", except for a few that have no string
         
         if field_type == 'checkbox':
 
@@ -431,8 +410,11 @@ def create_data_dict(input_dict):
 
     pd.to_pickle(df_out,'S:\ERAS\colorecatal_dict.pickle')
 
+
+# load_and_pickle('S:\ERAS\CR_all.xlsx')
 # create_data_dict('S:\ERAS\colorectal_registry_dictionary_06012017.xlsx')
 # create_data_dict('S:\ERAS\colorectal_registry_dictionary_01182017.xlsx')
+create_data_dict('S:\ERAS\colorectal_registry_dictionary_05262017.xlsx')
 
 
 def testing():
