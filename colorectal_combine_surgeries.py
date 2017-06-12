@@ -262,56 +262,127 @@ def condense_rows():
 
     event_dict = {'baseline':baseline_headers,'preop':preop_headers,'neoadjuvant':neoadjuvant_headers,'surgery':surgery_headers,'pathology':pathology_headers,'adjuvant':adjuvant_headers,'postop_comp':postop_comp_headers}
     
+    df_dict = {}
+    condensed_dict = {}
+
+    print(len(df.patient_id.unique()))
+
     #loops through the event dictionaries and adding patient_id if not there
     for event in event_dict:
         if 'patient_id' not in event_dict[event]:
             event_dict[event].append('patient_id')
-
-    df_pt = df[df.patient_id==1] #just for testing. will replace with loop
-
-    print('pt df shape {shape}'.format(shape=df_pt.shape))
-
-    pt_id=1
-
-    new_pt_df = pd.DataFrame() #initates new pt df
-
-    #loop through eac event
-    for event in event_dict:
         try:
-            df_event = df_pt[event_dict[event]]
-            one_event = df_event.dropna(thresh=df_event.shape[1]-df_event.shape[1]*.60)
-
-            #no events
-            if(one_event.shape[0]==0):
-                print('no events')
-                nan_filling = np.full(len(event_dict[event]),np.nan)
-                df_series = pd.Series(data=nan_filling,index=event_dict[event])
-                df_series.patient_id=pt_id
-                one_event = one_event.append(df_series,ignore_index=True)
-                if new_pt_df.shape[0]==0:
-                    new_pt_df = one_event
-                else:
-                    new_pt_df = new_pt_df.merge(one_event,on='patient_id')
-
-            #one event
-            elif one_event.shape[0]==1:
-                print('1 event')
-
-                if new_pt_df.shape[0]==0:
-                    new_pt_df = one_event
-                else:
-                    new_pt_df = new_pt_df.merge(one_event,on='patient_id')    
-            
-            #more than one event
-            else:
-                print('ERROR - more than one row')
-
+            df_dict[event] = df[event_dict[event]]
+            condensed_dict[event] = df_dict[event].dropna(thresh=df_dict[event].shape[1]-df_dict[event].shape[1]*.90)
+            # print(condensed_dict)
+            print(event)
+            print('event shape:{event_shape} condensed shape:{condensed_shape}'.format(event_shape=df_dict[event].shape,condensed_shape=condensed_dict[event].shape))
         except KeyError:
-            #need to fix this issue by updating the data dictionary
-            print('error')        
+            pass
 
-    print('shape={shape}'.format(shape=new_pt_df.shape))
+    final_df = pd.DataFrame()
 
+    for event_df in condensed_dict:
+        cur_df = condensed_dict[event_df]
+        multipt_series = cur_df.patient_id.value_counts()>1
+        multipt_list = multipt_series[multipt_series].index.tolist()
+        print(condensed_dict[event_df].shape)
+        # print(condensed_dict[event_df].patient_id.isin(multipt_list))
+        # condensed_dict[event_df].drop(condensed_dict[event_df].patient_id.isin(multipt_list))
+        # print(multipt_list)
+        cur_df=cur_df[~cur_df.patient_id.isin(multipt_list)]
+        print(cur_df.shape)
+
+
+
+        if final_df.empty:
+            final_df = condensed_dict[event_df]
+        else:
+            final_df = pd.merge(final_df,condensed_dict[event_df],on='patient_id',how='left')
+
+    print(final_df.shape)
+    print()
+    # print(final_df.head(20))
+    # print(final_df.patient_id.value_counts())
+    # test = final_df[final_df.patient_id==70]
+    # writer = pd.ExcelWriter('S:\ERAS\multpt_test.xlsx')
+    # test.to_excel(writer,'Sheet1')
+    # writer.close()
+
+    """
+    647     8
+    70      4
+    1473    4
+    700     4
+    253     2
+    1139    2
+    877     2
+    1036    2
+    399     2
+    3       2
+    1172    2
+    1409    2
+    313     2
+    1312    2
+    1058    2
+    1509    2
+    """
+    """
+    for pt in df.patient_id.unique():
+        
+
+        df_pt = df[df.patient_id==pt] #just for testing. will replace with loop
+
+        # print('pt df shape {shape}'.format(shape=df_pt.shape))
+
+        new_pt_df = pd.DataFrame() #initates new pt df
+        # pt_list = {}
+
+        #loop through eac event
+        for event in event_dict:
+            try:
+                df_event = df_pt[event_dict[event]]
+                one_event = df_event.dropna(thresh=df_event.shape[1]-df_event.shape[1]*.60)
+
+                #no events
+                if(one_event.shape[0]==0):
+                    # print('no events')
+                    nan_filling = np.full(len(event_dict[event]),np.nan)
+                    df_series = pd.Series(data=nan_filling,index=event_dict[event])
+                    df_series.patient_id=pt
+                    one_event = one_event.append(df_series,ignore_index=True)
+                    print(one_event.values.tolist())
+                    return
+                    # if len(pt_list)==0:
+                    #     pt_list[pt]=one_event.tolist()
+                    # else:
+                    #     pt_list[]
+
+                    if new_pt_df.shape[0]==0:
+                        new_pt_df = one_event
+                    else:
+                        new_pt_df = new_pt_df.merge(one_event,on='patient_id')
+
+                #one event
+                elif one_event.shape[0]==1:
+                    # print('1 event')
+
+                    if new_pt_df.shape[0]==0:
+                        new_pt_df = one_event
+                    else:
+                        new_pt_df = new_pt_df.merge(one_event,on='patient_id')    
+                
+                #more than one event
+                else:
+                    print('ERROR - Patient:{pt} had more than one row'.format(pt=pt))
+
+            except KeyError:
+                #need to fix this issue by updating the data dictionary
+                # print('error') 
+                pass       
+
+        # print('shape={shape}'.format(shape=new_pt_df.shape))
+        """
 
 
 #need to convert data dictionary from the redcap database variable/field names to column names used in database output
