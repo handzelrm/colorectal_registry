@@ -1,15 +1,3 @@
-"""
-Colorectal Machine Learning Final Pipeline
-
-Instructions:
-  Pipeline:
-    load_and_pickle| uses cr_columns (cuts down columns) & pickles main dataframe
-    pickle_comp| reads in main df from load an pickle &
-    pickle_surgeries| uses main df from load and pickle & pickles surgeries
-
-@author: Robert Handzel
-Last Modified: 4/1/17 
-"""
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,7 +7,9 @@ from matplotlib import style
 style.use('ggplot')
 
 def running_fxn(splits,percent):
-        print('0%|'+'#'*int(percent/(100/splits))+' '*int((100-percent)/(100/splits))+'|100%')
+    """prints off the precentage of patients completed"""
+
+    print('0%|'+'#'*int(percent/(100/splits))+' '*int((100-percent)/(100/splits))+'|100%')
 
 def load_and_pickle(file):
     print('load_and_pickle function is running...')
@@ -43,6 +33,7 @@ def load_and_pickle(file):
     pd.to_pickle(sx_list, 'S:\ERAS\crdb_sx_list.pickle')
 
 def extract_sx_data():
+    print('extract_sx_data is running...')
     df = pd.read_pickle('S:\ERAS\cr_datebase.pickle')
     sx_list = list(pd.read_pickle('S:\ERAS\crdb_sx_list.pickle'))
     
@@ -61,21 +52,7 @@ def create_sx_values():
     cnt_list = []
     num_of_pts = df.patient_id.unique().shape[0]
 
-    sx_list = list(sx_ddf.unique.unique())
-
-    #loops through all unique surgeries and adds a column
-    #will function like a onehotencoder. each surgery will have 1 column and 0 or 1
-    #one patient had 7 surgeries listed
-    # for sx in sx_list:
-    #     df[sx] = np.NaN
-        #need to replace characters to allow for lists
-        # sx = sx.replace(' ','_')
-        # sx = sx.replace('/','_')
-        # sx = sx.replace('-','_')
-        
-        # print("'{}':[],".format(sx)) #used to create text to initiate all lists
-        # print("{}".format(sx)) #used to create text to initiate all lists
-    
+    sx_list = list(sx_ddf.unique.unique())    
     
     output_dict = {'patient_id':[],
     'abdominal_perineal_resection':[],
@@ -184,58 +161,29 @@ def create_sx_values():
 
     print('Saving data to excel and pickle file...')
 
+    #write data to excel
+    print('writing data to file...')
     writer = pd.ExcelWriter('S:\ERAS\crdb_output.xlsx')
     df_out.to_excel(writer,'sheet1')
-
     writer.close()
 
     pd.to_pickle(df_out,'S:\ERAS\crdb_output.pickle')
 
-    
-
-def pt_query():
+def pt_query(surgery_list):
     df = pd.read_pickle('S:\ERAS\crdb_output.pickle')
-
-    tpc_list = ['total_proctocolectomy_with_end_ileostomy','total_proctocolectomy_with_ileal_pouch_anal_anastomosis','total_proctocolectomy_with_ileal_pouch_anal_anastomosis','total_proctocolectomy','total_abdominal_colectomy_with_end_ileostomy','total_abdominal_colectomy_with_ileorectal_anastamosis','total_abdominal_colectomy_with_ileorectal_anastamosis','total_abdominal_colectomy']
 
     pt_to_include = []
     for pt in range(df.shape[0]):
         pt_sx_list = df.columns[df.iloc[pt,]==1].values
         for item in pt_sx_list:
-            if item in tpc_list:
+            if item in surgery_list:
                 pt_to_include.append(df.patient_id.iloc[pt])
-
-    # print('Number of patients in the following list of procedures {} was {}'.format(tpc_list,len(pt_to_include)))
-    # print(pt_to_include)
 
     return pt_to_include
 
-load_and_pickle('S:\ERAS\CR_all.xlsx')
-# extract_sx_data()
-# create_sx_values()
-tpc_pt_list = pt_query()
-
-# print(tpc_pt_list)
-
-def tpc_data(file,tpc_pt_list):
-    df = pd.read_pickle('S:\ERAS\cr_datebase.pickle')
-    # redcap = df.redcap_event_name.unique().tolist()
-    df = df[df.patient_id.isin(tpc_pt_list)]
-    df_pt = df[df.patient_id==30]
-    
-    redcap = df_pt.redcap_event_name.unique().tolist()
-    cnt = 0
-    print(df_pt.shape[1])
-    for event in redcap:
-        # print(df_pt[df_pt.redcap_event_name==event].shape)
-        
-        cnt+=df_pt[df_pt.redcap_event_name==event].dropna(axis=1).shape[1]
-    print(cnt)
-
-
-# tpc_data('S:\ERAS\CR_all.xlsx',tpc_pt_list)
-
 def condense_rows():
+    """Takes in an pandas dataframe and dictionary and returns a condensed dataframe so 1 pt/row"""
+
     df = pd.read_pickle('S:\ERAS\cr_datebase.pickle') #whole database pickle
     df_dict = pd.read_pickle('S:\ERAS\colorecatal_dict.pickle') #loads dictionary pickle
 
@@ -300,10 +248,11 @@ def condense_rows():
     final_df.to_excel(writer,'Sheet1')
     writer.close()
 
-#need to update cr data - added blank rows of ileus compl (i think was deleted at some point to fix a bug)
+    #need to update cr data - added blank rows of ileus compl (i think was deleted at some point to fix a bug)
 
 def create_data_dict(input_dict):
-    # df = pd.read_excel('S:\ERAS\sx_list_imput.xlsx')
+    """Takes in a data dictionary in excel file form and saves output to excel and pickle"""
+
     df = pd.read_excel(input_dict)
     main_output = [] #will be column name in CR database
     description_output = [] #description of column
@@ -404,37 +353,29 @@ def create_data_dict(input_dict):
     df_out['unique'] = unique_list
     df_out['code'] = unique_code
     df_out['form_name'] = form_name_list
+
+    #writes to excel
     writer = pd.ExcelWriter('S:\ERAS\colorectal_dict.xlsx')
     df_out.to_excel(writer,'Sheet1')
     writer.close()
 
+    #writes to pickle
     pd.to_pickle(df_out,'S:\ERAS\colorecatal_dict.pickle')
+
+
+tpc_list = ['total_proctocolectomy_with_end_ileostomy','total_proctocolectomy_with_ileal_pouch_anal_anastomosis','total_proctocolectomy_with_ileal_pouch_anal_anastomosis','total_proctocolectomy','total_abdominal_colectomy_with_end_ileostomy','total_abdominal_colectomy_with_ileorectal_anastamosis','total_abdominal_colectomy_with_ileorectal_anastamosis','total_abdominal_colectomy']
+
+# load_and_pickle('S:\ERAS\CR_all.xlsx')
+# extract_sx_data()
+# create_sx_values()
+print(pt_query(tpc_list))
+
+
 
 
 # load_and_pickle('S:\ERAS\CR_all.xlsx')
 # create_data_dict('S:\ERAS\colorectal_registry_dictionary_06012017.xlsx')
 # create_data_dict('S:\ERAS\colorectal_registry_dictionary_01182017.xlsx')
-create_data_dict('S:\ERAS\colorectal_registry_dictionary_05262017.xlsx')
+# create_data_dict('S:\ERAS\colorectal_registry_dictionary_05262017.xlsx')
 
-
-def testing():
-    df = pd.read_pickle('S:\ERAS\cr_datebase.pickle')
-    df_dict = pd.read_pickle('S:\ERAS\sx_list_dict_comp_test.pickle')
-    df_col_list = df.columns.tolist()
-    df_dict_list = df_dict.name.tolist()
-    print(list(set(df_col_list)-set(df_dict_list)))
-    # print(list(set(df_dict_list)-set(df_col_list)))
-
-# testing()
-condense_rows()
-
-"""
-1 - no
-2- proctosigmoidectomy
-3,4,5,6, - no
-7,8,9 - other
-9 - proctosigmoidectomy
-
-
-
-"""
+# condense_rows()
